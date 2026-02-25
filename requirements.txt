@@ -1,0 +1,25 @@
+# FastAPI & Server
+fastapi
+uvicorn
+
+# Google Drive & Auth
+google-auth
+google-auth-oauthlib
+google-api-python-client
+
+# Document Parsing
+PyMuPDF
+python-docx
+
+# OpenAI
+openai
+
+# Config
+python-dotenv
+
+# Pydantic (FastAPI uses this internally)
+pydantic
+python-dotenv
+
+jinja2 
+python-multipart

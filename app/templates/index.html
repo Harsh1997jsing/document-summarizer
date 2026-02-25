@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Document Summarizer</title>
+    <style>
+        body { font-family: Arial; margin: 40px; background:#fafafa; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; }
+        th { background: #f4f4f4; }
+        button { padding: 8px 16px; cursor: pointer; margin-right: 8px; }
+        .container { max-width: 1100px; margin: auto; }
+        .error { color: red; margin-top: 10px; }
+        .success { color: green; margin-top: 10px; }
+        .controls { margin-bottom: 20px; }
+        input { padding:6px; width:300px; }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>📄 Google Drive Document Summarizer</h2>
+
+<div class="controls">
+    <label><b>Folder ID (optional)</b></label><br><br>
+    <input type="text" id="folderId" placeholder="Enter Drive folder id">
+
+    <br><br>
+
+    <button onclick="listFiles()">📂 Show All Documents</button>
+    <button onclick="runPipeline()">🤖 Fetch & Summarize</button>
+</div>
+
+<div id="message"></div>
+
+<!-- ================= FILES TABLE ================= -->
+
+<table id="filesTable" style="display:none;">
+    <thead>
+        <tr>
+            <th>File Name</th>
+            <th>Type</th>
+            <th>File ID</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- ================= SUMMARY TABLE ================= -->
+
+<table id="resultsTable" style="display:none;">
+    <thead>
+        <tr>
+            <th>File Name</th>
+            <th>Status</th>
+            <th>Summary</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<br>
+
+<button id="downloadCsvBtn" style="display:none;" onclick="downloadCSV()">
+    ⬇ Download CSV
+</button>
+
+</div>
+
+<script>
+
+// ================= LIST FILES =================
+
+async function listFiles() {
+    const folderId = document.getElementById("folderId").value;
+    const messageDiv = document.getElementById("message");
+
+    messageDiv.innerHTML = "⏳ Fetching files...";
+
+    try {
+        let url = "/drive/files";
+        if (folderId) {
+            url += `?folder_id=${folderId}`;
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Failed to fetch files");
+        }
+
+        renderFilesTable(data.files);
+        messageDiv.innerHTML = "<span class='success'>✅ Files loaded</span>";
+
+    } catch (err) {
+        messageDiv.innerHTML = `<span class="error">❌ ${err.message}</span>`;
+    }
+}
+
+function renderFilesTable(files) {
+    const table = document.getElementById("filesTable");
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    if (!files || files.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='3'>No supported files found</td></tr>";
+    } else {
+        files.forEach(f => {
+            const row = `
+                <tr>
+                    <td>${f.name}</td>
+                    <td>${f.extension}</td>
+                    <td>${f.id}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    table.style.display = "table";
+}
+
+// ================= RUN PIPELINE =================
+
+async function runPipeline() {
+    const folderId = document.getElementById("folderId").value;
+    const messageDiv = document.getElementById("message");
+
+    messageDiv.innerHTML = "⏳ Running summarization...";
+
+    try {
+        const response = await fetch("/summarize", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                folder_id: folderId || null
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Pipeline failed");
+        }
+
+        renderResultsTable(data.results);
+        messageDiv.innerHTML = "<span class='success'>✅ Summarization completed</span>";
+
+    } catch (err) {
+        messageDiv.innerHTML = `<span class="error">❌ ${err.message}</span>`;
+    }
+}
+
+function renderResultsTable(results) {
+    const table = document.getElementById("resultsTable");
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    if (!results || results.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='3'>No results</td></tr>";
+    } else {
+        results.forEach(r => {
+            const row = `
+                <tr>
+                    <td>${r.file_name || r.name || "-"}</td>
+                    <td>${r.status}</td>
+                    <td>${r.summary || r.error || "-"}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    table.style.display = "table";
+    const csvBtn = document.getElementById("downloadCsvBtn");
+    if (csvBtn) csvBtn.style.display = "inline-block";
+}
+
+// ================= DOWNLOAD =================
+
+function downloadCSV() {
+    window.location.href = "/summarize/download/csv";
+}
+
+</script>
+
+</body>
+</html>
