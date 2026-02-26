@@ -11,44 +11,44 @@ doc_summarizer/
 │
 ├── app/
 │   ├── api/
-│   │   ├── __init__.py              # Registers all routers
-│   │   ├── drive_routes.py          # Google Drive API routes
-│   │   └── summarize_routes.py      # Summarization API routes
+│   │   ├── __init__.py              
+│   │   ├── drive_routes.py          
+│   │   └── summarize_routes.py      
 │   │
 │   ├── auth/
-│   │   └── google_auth.py           # Google OAuth2 authentication
+│   │   └── google_auth.py          
 │   │
 │   ├── clients/
-│   │   ├── drive_client.py          # Google Drive client
-│   │   └── llm_client.py            # OpenAI API client
+│   │   ├── drive_client.py        
+│   │   └── llm_client.py           
 │   │
 │   ├── output/
-│   │   ├── csv_exporter.py          # Export summaries to CSV
-│   │   └── pdf_exporter.py          # Export summaries to PDF
+│   │   ├── csv_exporter.py          
+│   │   └── pdf_exporter.py          
 │   │
 │   ├── parser/
 │   │   ├── __init__.py
-│   │   ├── parser_factory.py        # Auto-detects file type and parses
-│   │   ├── pdf_parser.py            # PDF text extraction
-│   │   ├── docx_parser.py           # DOCX text extraction
-│   │   └── txt_parser.py            # TXT text extraction
+│   │   ├── parser_factory.py        
+│   │   ├── pdf_parser.py           
+│   │   ├── docx_parser.py          
+│   │   └── txt_parser.py            
 │   │
 │   ├── services/
-│   │   ├── pipeline.py              # Main orchestration (Drive → Parse → Summarize)
+│   │   ├── pipeline.py              
 |   |
 │   │
-│   ├── utils/                       # Helper/utility functions
+│   ├── utils/                     
 │   │
 │   ├── __init__.py
-│   ├── config.py                    # App configuration from .env
-│   └── main.py                      # FastAPI entry point
+│   ├── config.py                   
+│   └── main.py                      
 │
 ├── credentials/
-│   └── credentials.json             # Google OAuth2 credentials (gitignored)
+│   └── credentials.json            
 │
-├── downloads/                       # Downloaded files from Drive (gitignored)
-├── .env                             # Environment variables (gitignored)
-├── .env.example                     # Example env file
+├── downloads/                      
+├── .env                            
+├── .env.example                     
 ├── .gitignore
 ├── requirements.txt
 └── README.md
@@ -62,7 +62,7 @@ doc_summarizer/
 
 ```bash
 git clone https://github.com/Harsh1997jsing/document-summarizer.git
-cd doc_summarizer
+cd document-summarizer
 ```
 
 ### 2. Create Virtual Environment
@@ -104,8 +104,20 @@ DRIVE_FOLDER_ID=your-google-drive-folder-id
 4. Go to **APIs & Services → Credentials**
 5. Create **OAuth 2.0 Client ID** → Desktop App
 6. Download the JSON file
-7. Rename it to `credentials.json`
-8. Place it inside the `credentials/` folder
+
+7. Create the `credentials` folder in the project root and move the downloaded file there. Example commands:
+
+- Windows (PowerShell / CMD):
+
+  mkdir credentials
+  # Rename the downloaded JSON file to credentials.json and place it inside the folder
+
+- macOS / Linux:
+
+  mkdir -p credentials
+  mv path/to/downloaded-file.json credentials/credentials.json
+
+8. Ensure the file is located at `credentials/credentials.json`. The application will create `credentials/token.json` automatically after the first OAuth flow when you run the app.
 
 ### 6. Run the Application
 
@@ -116,6 +128,7 @@ python app/main.py
 Or using uvicorn directly:
 
 ```bash
+uvicorn app.main:app --reload 
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -131,36 +144,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 | `POST` | `/summarize` | Run full summarization pipeline |
 | `GET` | `/summarize/status` | Summarizer health check |
 
-### POST /summarize — Request Body
 
-```json
-{
-  "folder_id": "your_google_drive_folder_id",
-  "download_dir": "downloads"
-}
-```
-
-### POST /summarize — Response
-
-```json
-{
-  "status": "success",
-  "folder_id": "your_folder_id",
-  "total": 3,
-  "success_count": 3,
-  "failed_count": 0,
-  "results": [
-    {
-      "file_name": "report.pdf",
-      "summary": "This document discusses...",
-      "status": "success",
-      "error": null
-    }
-  ]
-}
-```
-
----
 
 ## 📖 Swagger Docs
 
@@ -168,6 +152,27 @@ Once the server is running, visit:
 
 - **Swagger UI** → [http://localhost:8000/docs](http://localhost:8000/docs)
 - **ReDoc** → [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+- 
+
+## 🖥️ Rendering UI
+
+To view the built-in frontend UI:
+
+1. Start the server (replace host/port if configured in your `.env`):
+
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+2. Open in your browser:
+
+- Main UI: http://localhost:8000/ui
+- Swagger UI: http://localhost:8000/docs
+
+3. The UI template is located at `app/templates/index.html` and is served by the `/ui` route.
+
+If you changed `HOST` or `PORT` in `.env`, replace `localhost:8000` with `HOST:PORT`.
 
 ---
 
@@ -193,21 +198,6 @@ Once the server is running, visit:
 | `DRIVE_FOLDER_ID` | Default Drive folder ID | optional |
 | `DOWNLOAD_DIR` | Local folder for downloads | `downloads` |
 
----
-
-## 🧰 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | FastAPI |
-| AI Summarization | OpenAI GPT |
-| Google Drive | Google Drive API v3 + OAuth2 |
-| PDF Parsing | PyMuPDF (fitz) |
-| DOCX Parsing | python-docx |
-| Server | Uvicorn |
-| Config | python-dotenv |
-
----
 
 ## 📝 License
 

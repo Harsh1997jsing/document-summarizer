@@ -74,7 +74,6 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup():
         logger.info(f"Document Summarizer API started.")
-        logger.info(f"Swagger docs: http://{Config.HOST}:{Config.PORT}/docs")
 
 
     @app.on_event("shutdown")
